@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Mi Cocina">
+<title>Mi Cocina — Adriana</title>
+<style>
+:root {
+  /* Mercado mexicano palette */
+  --verde:#1B6B3A; --verde-m:#2E8B57; --verde-l:#E8F5EE; --verde-b:#B8DFC8;
+  --naranja:#D4500A; --naranja-m:#E8672A; --naranja-l:#FEF0E8; --naranja-b:#F5B899;
+  --amarillo:#C49A00; --amarillo-l:#FFFBEA; --amarillo-b:#FFE57A;
+  --rojo:#C0392B; --rojo-l:#FDECEA;
+  --morado:#6B3FA0; --morado-l:#F3EEFF;
+  --bg:#FFFDF8; --surface:#FFFFFF; --surface2:#F8F5EF;
+  --border:#E4DDD0; --border2:#CFC7B8;
+  --text:#1E1A14; --text2:#5C5449; --text3:#9C9080;
+  --r:14px; --rs:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;line-height:1.5;overscroll-behavior:none;}
+
+/* ── Header ── */
+.hdr{background:var(--verde);padding:12px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:50;}
+.logo{font-size:22px;}
+.hdr-info{flex:1;}
+.hdr-title{font-size:16px;font-weight:700;color:white;}
+.hdr-sub{font-size:11px;color:rgba(255,255,255,.75);}
+.streak{background:var(--naranja);color:white;border-radius:20px;padding:4px 10px;font-size:12px;font-weight:700;}
+
+/* ── Character bar ── */
+.char-bar{background:var(--verde-m);padding:8px 14px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;border-bottom:2px solid var(--verde);}
+.char-bar::-webkit-scrollbar{display:none;}
+.char-btn{flex-shrink:0;padding:5px 12px;border-radius:20px;border:1.5px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:rgba(255,255,255,.85);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.char-btn.active{background:white;color:var(--verde);border-color:white;}
+
+/* ── Progress ── */
+.dprog{background:var(--surface);border-bottom:1px solid var(--border);padding:9px 16px;display:flex;align-items:center;gap:8px;}
+.prog-lbl{font-size:11px;color:var(--text3);white-space:nowrap;}
+.prog-track{flex:1;height:7px;background:var(--border);border-radius:4px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--verde-m),var(--naranja-m));border-radius:4px;transition:width .6s cubic-bezier(.34,1.56,.64,1);}
+.day-pips{display:flex;gap:5px;}
+.pip{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;border:2px solid var(--border);color:var(--text3);cursor:pointer;transition:all .2s;background:var(--surface);}
+.pip.active{border-color:var(--verde-m);color:var(--verde);background:var(--verde-l);}
+.pip.done{border-color:var(--verde-m);background:var(--verde-m);color:white;}
+
+/* ── Nav ── */
+.nav{display:flex;background:var(--surface);border-bottom:2px solid var(--border);overflow-x:auto;scrollbar-width:none;position:sticky;top:93px;z-index:40;}
+.nav::-webkit-scrollbar{display:none;}
+.nav-btn{flex:1;min-width:58px;padding:9px 4px;text-align:center;font-size:11px;font-weight:600;color:var(--text3);border:none;background:transparent;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap;}
+.nav-btn.active{color:var(--naranja);border-bottom-color:var(--naranja);}
+
+/* ── Main ── */
+.main{max-width:600px;margin:0 auto;padding:14px 14px 100px;}
+
+/* ── Section label ── */
+.slbl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin:16px 0 8px;display:flex;align-items:center;justify-content:space-between;}
+
+/* ── Celebration ── */
+.celebrate{border-radius:var(--r);padding:12px 16px;margin-bottom:14px;display:none;align-items:center;gap:12px;animation:pop .4s cubic-bezier(.34,1.56,.64,1);}
+.celebrate.show{display:flex;}
+.celebrate.verde{background:var(--verde-m);color:white;}
+.celebrate.naranja{background:var(--naranja-m);color:white;}
+@keyframes pop{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* ── Cards ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:10px;box-shadow:0 1px 6px rgba(0,0,0,.05);}
+.card-hdr{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px;cursor:pointer;user-select:none;}
+.card-hdr:hover{background:var(--surface2);}
+.cicon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.clbl{font-size:13px;font-weight:600;flex:1;}
+.chev{color:var(--text3);font-size:12px;transition:transform .2s;}
+.chev.open{transform:rotate(180deg);}
+.cbody{padding:12px 14px;}
+.cbody.hidden{display:none;}
+
+/* ── Appliance badge ── */
+.app-badges{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;}
+.app-badge{display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;background:var(--morado-l);color:var(--morado);border:1px solid #C8B8F0;}
+
+/* ── Meal ── */
+.meal-block{margin-bottom:12px;}
+.meal-who{display:flex;gap:6px;align-items:center;margin-bottom:5px;}
+.avatar{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
+.av-f{background:#EEEDFE;color:#3C3489;}
+.av-e{background:var(--verde-l);color:var(--verde);}
+.meal-name{font-size:13px;font-weight:600;}
+.meal-det{font-size:13px;color:var(--text2);line-height:1.55;padding-left:28px;}
+.meal-tip{background:var(--naranja-l);border-left:3px solid var(--naranja-m);border-radius:0 6px 6px 0;padding:7px 11px;font-size:12px;color:#7A2E0A;margin-top:8px;}
+.divider{border:none;border-top:1px solid var(--border);margin:8px 0;}
+
+/* ── Shopping ── */
+.shop-sec{margin-bottom:10px;}
+.shop-sec-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:6px;}
+.shop-item{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:opacity .2s;}
+.shop-item:last-child{border-bottom:none;}
+.shop-item.checked{opacity:.38;}
+.shop-chk{width:20px;height:20px;border-radius:6px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;font-size:11px;}
+.shop-item.checked .shop-chk{background:var(--verde-m);border-color:var(--verde-m);color:white;}
+.shop-name{font-size:13px;flex:1;}
+.shop-price{font-size:12px;color:var(--text3);font-weight:500;}
+
+/* ── Budget ── */
+.bud-wrap{background:var(--amarillo-l);border:1px solid var(--amarillo-b);border-radius:var(--r);padding:12px 14px;margin-bottom:10px;}
+.bud-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+.bud-lbl{font-size:12px;color:var(--text2);}
+.bud-num{font-size:14px;font-weight:700;color:var(--amarillo);}
+.bud-track{height:8px;background:rgba(0,0,0,.08);border-radius:4px;overflow:hidden;}
+.bud-fill{height:100%;border-radius:4px;transition:width .5s ease,background .3s;}
+
+/* ── Inventory ── */
+.inv-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.inv-item{display:flex;align-items:center;gap:7px;padding:8px 10px;border-radius:10px;border:1.5px solid var(--border);cursor:pointer;transition:all .15s;font-size:13px;user-select:none;background:var(--surface);}
+.inv-item.on{border-color:var(--verde-b);background:var(--verde-l);color:var(--verde);font-weight:500;}
+.inv-em{font-size:17px;}
+
+/* ── Appliances config ── */
+.app-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.app-item{display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:10px;border:1.5px solid var(--border);cursor:pointer;transition:all .15s;user-select:none;background:var(--surface);}
+.app-item.on{border-color:#C8B8F0;background:var(--morado-l);color:var(--morado);font-weight:500;}
+.app-name{font-size:12px;font-weight:500;}
+.app-desc{font-size:11px;color:var(--text3);margin-top:1px;}
+
+/* ── Wins ── */
+.wins-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;}
+.wins-row::-webkit-scrollbar{display:none;}
+.win-chip{flex-shrink:0;background:var(--verde-l);border:1.5px solid var(--verde-b);border-radius:10px;padding:8px 11px;text-align:center;min-width:80px;transition:opacity .4s;}
+.win-em{font-size:19px;display:block;}
+.win-lbl{font-size:10px;color:var(--verde);font-weight:700;display:block;margin-top:2px;}
+
+/* ── Chat ── */
+.chat-area{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:10px;box-shadow:0 1px 6px rgba(0,0,0,.05);}
+.chat-hdr{padding:10px 14px;background:var(--naranja-l);border-bottom:1px solid var(--naranja-b);display:flex;align-items:center;gap:8px;}
+.char-name-display{font-size:13px;font-weight:700;color:var(--naranja);}
+.char-mood{font-size:11px;color:var(--text3);}
+.chat-dot{width:8px;height:8px;border-radius:50%;background:var(--naranja-m);animation:pulse 2s infinite;margin-left:auto;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.chat-msgs{padding:10px 14px;display:flex;flex-direction:column;gap:9px;max-height:320px;overflow-y:auto;}
+.msg{max-width:88%;padding:9px 12px;border-radius:14px;font-size:13px;line-height:1.6;}
+.msg.bot{background:var(--surface2);border:1px solid var(--border);align-self:flex-start;border-bottom-left-radius:4px;}
+.msg.user{background:var(--verde-m);color:white;align-self:flex-end;border-bottom-right-radius:4px;}
+.typing-dots span{display:inline-block;width:5px;height:5px;background:var(--text3);border-radius:50%;margin:0 2px;animation:bounce 1s infinite;}
+.typing-dots span:nth-child(2){animation-delay:.15s;}
+.typing-dots span:nth-child(3){animation-delay:.3s;}
+@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
+.qreplies{display:flex;flex-wrap:wrap;gap:5px;padding:0 14px 9px;}
+.qbtn{padding:5px 11px;border-radius:20px;border:1.5px solid var(--naranja-b);background:var(--naranja-l);color:var(--naranja);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;}
+.qbtn:hover{background:var(--naranja-b);}
+.chat-inp-row{display:flex;gap:7px;padding:9px 11px;border-top:1px solid var(--border);}
+.chat-inp{flex:1;border:1.5px solid var(--border);border-radius:22px;padding:8px 13px;font-size:13px;font-family:inherit;background:var(--surface);color:var(--text);outline:none;transition:border-color .15s;}
+.chat-inp:focus{border-color:var(--verde-m);}
+.send-btn{width:36px;height:36px;border-radius:50%;background:var(--verde-m);color:white;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:transform .15s,background .15s;flex-shrink:0;}
+.send-btn:hover{background:var(--verde);transform:scale(1.05);}
+
+/* ── Buttons ── */
+.btn-p{width:100%;padding:12px;background:var(--verde-m);color:white;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .15s,transform .1s;margin-top:6px;}
+.btn-p:hover{background:var(--verde);}
+.btn-p:active{transform:scale(.98);}
+.btn-p.naranja{background:var(--naranja-m);}
+.btn-p.naranja:hover{background:var(--naranja);}
+.btn-s{width:100%;padding:10px;background:transparent;color:var(--verde-m);border:1.5px solid var(--verde-b);border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .15s;margin-top:6px;}
+.btn-s:hover{background:var(--verde-l);}
+
+/* ── Badges ── */
+.badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:700;}
+.bg-verde{background:var(--verde-l);color:var(--verde);}
+.bg-naranja{background:var(--naranja-l);color:var(--naranja);}
+.bg-morado{background:var(--morado-l);color:var(--morado);}
+.bg-amarillo{background:var(--amarillo-l);color:var(--amarillo);}
+
+/* ── Budget toggle ── */
+.toggle-row{display:flex;align-items:center;gap:10px;padding:10px 14px;}
+.tgl{position:relative;width:40px;height:23px;background:var(--border2);border-radius:12px;cursor:pointer;transition:background .2s;flex-shrink:0;}
+.tgl.on{background:var(--verde-m);}
+.tgl-knob{position:absolute;top:3px;left:3px;width:17px;height:17px;background:white;border-radius:50%;transition:transform .2s;pointer-events:none;}
+.tgl.on .tgl-knob{transform:translateX(17px);}
+.bud-inp-row{display:flex;gap:8px;align-items:center;padding:8px 14px 12px;}
+.bud-inp{flex:1;border:1.5px solid var(--border);border-radius:10px;padding:8px 12px;font-size:14px;font-family:inherit;color:var(--text);outline:none;}
+.bud-inp:focus{border-color:var(--verde-m);}
+
+/* ── Tab panels ── */
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* ── Empty states ── */
+.empty-state{text-align:center;padding:32px 20px;color:var(--text2);}
+.empty-state div{font-size:36px;margin-bottom:10px;}
+.empty-state p{font-size:13px;line-height:1.6;}
+
+/* ── Quick actions grid ── */
+.qa-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.qa-btn{padding:14px 10px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface);cursor:pointer;text-align:center;font-family:inherit;transition:all .15s;}
+.qa-btn:hover{border-color:var(--verde-b);background:var(--verde-l);}
+.qa-em{font-size:22px;display:block;margin-bottom:4px;}
+.qa-lbl{font-size:12px;font-weight:600;color:var(--text);}
+.qa-sub{font-size:11px;color:var(--text3);margin-top:2px;}
+
+/* ── Recipe card ── */
+.recipe-card{background:var(--amarillo-l);border:1px solid var(--amarillo-b);border-radius:var(--r);padding:12px 14px;margin-top:8px;}
+.recipe-title{font-size:14px;font-weight:700;color:var(--amarillo);margin-bottom:6px;}
+.recipe-steps{font-size:13px;color:var(--text2);line-height:1.7;}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:white;padding:9px 18px;border-radius:22px;font-size:13px;font-weight:600;transition:transform .35s cubic-bezier(.34,1.56,.64,1);z-index:300;pointer-events:none;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+.note{font-size:12px;color:var(--text3);text-align:center;margin:8px 0;}
+.api-warning{background:var(--rojo-l);border:1px solid #F5B0AA;border-radius:var(--rs);padding:10px 13px;font-size:12px;color:var(--rojo);margin-bottom:10px;display:none;}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="hdr">
+  <div class="logo">🌮</div>
+  <div class="hdr-info">
+    <div class="hdr-title">Mi Cocina Diaria</div>
+    <div class="hdr-sub">Frida & Emiliano · Costa Rica</div>
+  </div>
+  <div class="streak" id="streak-badge">🔥 Día 1</div>
+</div>
+
+<!-- Character selector -->
+<div class="char-bar" id="char-bar">
+  <button class="char-btn" data-char="brayan" onclick="setChar('brayan',this)">🤙 El Brayan</button>
+  <button class="char-btn" data-char="pao" onclick="setChar('pao',this)">💅 Pao</button>
+  <button class="char-btn" data-char="mary" onclick="setChar('mary',this)">🌻 Mary</button>
+  <button class="char-btn" data-char="don" onclick="setChar('don',this)">🎩 Don Finísima</button>
+</div>
+
+<!-- Progress -->
+<div class="dprog">
+  <div class="prog-lbl">Tu semana</div>
+  <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:5%"></div></div>
+  <div class="day-pips" id="day-pips"></div>
+</div>
+
+<!-- Nav -->
+<div class="nav">
+  <button class="nav-btn active" onclick="showTab('inicio')">🏠 Inicio</button>
+  <button class="nav-btn" onclick="showTab('plan')">📅 Plan</button>
+  <button class="nav-btn" onclick="showTab('super')">🛒 Súper</button>
+  <button class="nav-btn" onclick="showTab('chat')">💬 Chat</button>
+  <button class="nav-btn" onclick="showTab('config')">⚙️ Config</button>
+</div>
+
+<div class="main">
+
+<!-- ══ INICIO ══ -->
+<div class="tab-panel active" id="tab-inicio">
+  <div class="celebrate verde" id="celebrate">
+    <div style="font-size:26px" id="cel-emoji">🎉</div>
+    <div>
+      <div style="font-size:14px;font-weight:700" id="cel-text">¡Bien hecho!</div>
+      <div style="font-size:12px;opacity:.9;margin-top:2px" id="cel-sub">Sigue así</div>
+    </div>
+  </div>
+
+
+
+  <div class="slbl">Tus logros</div>
+  <div class="wins-row">
+    <div class="win-chip" id="win-config" style="opacity:.3"><span class="win-em">⚙️</span><span class="win-lbl">Config lista</span></div>
+    <div class="win-chip" id="win-inv"><span class="win-em">🏠</span><span class="win-lbl">Despensa</span></div>
+    <div class="win-chip" id="win-plan" style="opacity:.3"><span class="win-em">📅</span><span class="win-lbl">Plan activo</span></div>
+    <div class="win-chip" id="win-d1" style="opacity:.3"><span class="win-em">✅</span><span class="win-lbl">Día 1</span></div>
+    <div class="win-chip" id="win-d2" style="opacity:.3"><span class="win-em">✅</span><span class="win-lbl">Día 2</span></div>
+    <div class="win-chip" id="win-d3" style="opacity:.3"><span class="win-em">✅</span><span class="win-lbl">Día 3</span></div>
+  </div>
+
+  <div class="slbl">¿Qué hacemos hoy?</div>
+  <div class="qa-grid">
+    <button class="qa-btn" onclick="generatePlan();showTab('plan')">
+      <span class="qa-em">📅</span>
+      <div class="qa-lbl">Generar plan</div>
+      <div class="qa-sub">3 días adaptado</div>
+    </button>
+    <button class="qa-btn" onclick="showTab('super')">
+      <span class="qa-em">🛒</span>
+      <div class="qa-lbl">Lista del súper</div>
+      <div class="qa-sub">Lo que necesitas</div>
+    </button>
+    <button class="qa-btn" onclick="sendQuick('¿Qué puedo cocinar hoy con lo que tengo en casa?')">
+      <span class="qa-em">🍳</span>
+      <div class="qa-lbl">¿Qué cocino hoy?</div>
+      <div class="qa-sub">Con lo que hay</div>
+    </button>
+    <button class="qa-btn" onclick="sendQuick('Dame una receta rápida para la lonchera de mañana de Frida y Emiliano')">
+      <span class="qa-em">🎒</span>
+      <div class="qa-lbl">Lonchera mañana</div>
+      <div class="qa-sub">Frida & Emiliano</div>
+    </button>
+    <button class="qa-btn" onclick="sendQuick('¿Qué puedo hacer en el air fryer que sea rápido y sin complicaciones?')">
+      <span class="qa-em">💨</span>
+      <div class="qa-lbl">Air fryer rápido</div>
+      <div class="qa-sub">Sin complicaciones</div>
+    </button>
+    <button class="qa-btn" onclick="sendQuick('Dame algo para poner en la olla Oster que se haga solo mientras hago otras cosas')">
+      <span class="qa-em">🫕</span>
+      <div class="qa-lbl">Olla Oster</div>
+      <div class="qa-sub">Se hace solo</div>
+    </button>
+  </div>
+
+  <div id="today-wrap" style="display:none">
+    <div class="slbl">Hoy — <span id="today-name">Lunes</span></div>
+    <div id="today-cards"></div>
+  </div>
+</div>
+
+<!-- ══ PLAN ══ -->
+<div class="tab-panel" id="tab-plan">
+  <div id="plan-empty" class="empty-state">
+    <div>📅</div>
+    <p>Marca lo que tienes en casa<br>y genera tu plan de 3 días.</p>
+    <button class="btn-p" style="margin-top:14px" onclick="showTab('config')">Configurar primero →</button>
+  </div>
+  <div id="plan-content" style="display:none">
+    <div id="day-cards"></div>
+  </div>
+</div>
+
+<!-- ══ SÚPER ══ -->
+<div class="tab-panel" id="tab-super">
+  <div id="bud-display" style="display:none">
+    <div class="slbl">Presupuesto semanal</div>
+    <div class="bud-wrap">
+      <div class="bud-row">
+        <span class="bud-lbl">Estimado del carrito</span>
+        <span class="bud-num" id="b-spent">₡0</span>
+      </div>
+      <div class="bud-row" style="margin-bottom:6px">
+        <span class="bud-lbl">Límite</span>
+        <span class="bud-num" id="b-limit">₡—</span>
+      </div>
+      <div class="bud-track"><div class="bud-fill" id="b-fill" style="width:0%"></div></div>
+    </div>
+  </div>
+  <div id="shop-empty" class="empty-state">
+    <div>🛒</div>
+    <p>Genera tu plan primero para ver<br>qué necesitas comprar.</p>
+    <button class="btn-p" style="margin-top:14px" onclick="showTab('config')">Configurar →</button>
+  </div>
+  <div id="shop-content" style="display:none">
+    <div class="slbl">Lista del súper <span id="shop-rem" class="badge bg-verde">—</span></div>
+    <div class="card">
+      <div id="shop-list" style="padding:4px 14px 8px"></div>
+      <div style="padding:0 14px 12px;display:flex;gap:8px">
+        <button class="btn-s" style="margin:0" onclick="markAll()">Marcar todo ✓</button>
+        <button class="btn-s" style="margin:0" onclick="clearChecked()">Limpiar ✓</button>
+      </div>
+    </div>
+    <div class="note">Toca cada artículo cuando lo pongas en el carrito</div>
+  </div>
+</div>
+
+<!-- ══ CHAT ══ -->
+<div class="tab-panel" id="tab-chat">
+  <div class="chat-area" style="margin-top:4px">
+    <div class="chat-hdr">
+      <div>
+        <div class="char-name-display" id="chat-char-name">El Brayan</div>
+        <div class="char-mood" id="chat-char-mood">Asistente de cocina · Modo chilango activado 🤙</div>
+      </div>
+      <div class="chat-dot"></div>
+    </div>
+    <div class="chat-msgs" id="chat-msgs">
+      <div class="msg bot" id="welcome-msg">¡Qué onda, Adriana! 🤙 Nel que te va a quedar cañón la semana. Cuéntame qué tienes en la nevera o qué se te complicó, y ya verás que entre los dos le damos vuelta al asunto. ¡Simón!</div>
+    </div>
+    <div class="qreplies" id="qreplies">
+      <button class="qbtn" onclick="sendQuick('Solo tengo huevos y pan, ¿qué preparo?')">Solo huevos y pan</button>
+      <button class="qbtn" onclick="sendQuick('No tuve tiempo de cocinar hoy, ¿qué hago?')">No tuve tiempo</button>
+      <button class="qbtn" onclick="sendQuick('Dame una receta fácil para el air fryer')">Receta air fryer</button>
+      <button class="qbtn" onclick="sendQuick('Busca una receta con pollo para niños')">Buscar receta 🔍</button>
+    </div>
+    <div class="chat-inp-row">
+      <input type="text" id="chat-in" class="chat-inp" placeholder="Escribe aquí…" onkeydown="if(event.key==='Enter')sendChat()">
+      <button class="send-btn" onclick="sendChat()">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CONFIG ══ -->
+<div class="tab-panel" id="tab-config">
+
+
+
+  <div class="slbl">Tus electrodomésticos</div>
+  <div class="card">
+    <div class="cbody">
+      <div class="app-grid" id="appliance-grid"></div>
+    </div>
+  </div>
+
+  <div class="slbl">¿Qué tienes en casa? <span class="badge bg-verde">Toca lo que tienes</span></div>
+  <div class="card">
+    <div class="cbody">
+      <div class="inv-grid" id="inv-grid"></div>
+      <div style="display:flex;gap:7px;margin-top:10px;align-items:center">
+        <input type="text" id="inv-custom" class="chat-inp" placeholder="Otro ingrediente…" style="font-size:13px;padding:8px 12px">
+        <button onclick="addCustomIng()" class="send-btn" style="font-size:13px">+</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="slbl">Presupuesto (opcional)</div>
+  <div class="card">
+    <div class="toggle-row">
+      <div class="tgl" id="bud-toggle" onclick="toggleBudget()"><div class="tgl-knob"></div></div>
+      <div>
+        <div style="font-size:13px;font-weight:600">Modo presupuesto limitado</div>
+        <div style="font-size:12px;color:var(--text3)">Sugiere opciones más económicas</div>
+      </div>
+    </div>
+    <div class="bud-inp-row" id="bud-row" style="display:none">
+      <span style="font-size:14px;color:var(--text2)">₡</span>
+      <input type="number" id="bud-inp" class="bud-inp" placeholder="Ej: 50000" oninput="saveBudget()">
+      <span style="font-size:13px;color:var(--text3)">/ semana</span>
+    </div>
+  </div>
+
+  <button class="btn-p naranja" onclick="generatePlan();showTab('plan')">✨ Generar plan para 3 días</button>
+  <div class="note">La IA adapta el plan a tu despensa y electrodomésticos</div>
+</div>
+
+</div><!-- /main -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══ CHARACTERS ══
+const CHARS = {
+  brayan: {
+    name: 'El Brayan',
+    mood: 'Modo chilango activado 🤙',
+    welcome: '¡Qué onda, Adriana! 🤙 Nel que te va a quedar cañón la semana. Cuéntame qué tienes en la nevera o qué se te complicó, y ya verás que entre los dos le damos vuelta al asunto. ¡Simón!',
+    system: `Eres El Brayan, un cuate chilango de barrio muy buena onda que ayuda a Adriana con la cocina. Hablas con muchísimo slang mexicano de la CDMX: "órale", "simón", "nel", "qué pedo", "ta cañón", "ya estuvo", "no manches", "chido", "chingón", "neta", "cuate", "carnal", "al tiro", "de volada", "ándale pues", "pos", "mano", "estar en chinga", "ni pedo", "qué oso", "échale ganas", "no te rajes", "está de pelos", "a toda máquina". Usas refranes callejeros mexicanos. Eres entusiasta, directo y siempre positivo aunque uses palabrotas suaves. Das consejos prácticos de cocina de forma muy coloquial. NUNCA en inglés.`
+  },
+  pao: {
+    name: 'Pao',
+    mood: 'Lista para ayudarte 💅',
+    welcome: 'O sea, hola Adriana! 💅 Literalmente estoy súper emocionada de ayudarte con la cocina esta semana. Es que cocinar para tus niños puede ser súper cute si le agarras el modo. ¿Qué necesitas? ¡Dime todo!',
+    system: `Eres Pao, una chica fresa regiomontana muy positiva que ayuda a Adriana con la cocina. Hablas con frases como "o sea", "literalmente", "súper", "qué oso", "está súper cute", "qué cute", "no manches", "ay dios", "es que", "obvio", "para nada", "¿verdad?", "¡dios mío!", "qué heavy", "estoy obsesionada". Eres muy entusiasta, todo te encanta, siempre encuentras el lado positivo. Das consejos prácticos pero con mucho entusiasmo y positividad. NUNCA en inglés.`
+  },
+  mary: {
+    name: 'Mary',
+    mood: 'Tu tía favorita en la cocina 🌻',
+    welcome: '¡Ay hijita, buenas! Aquí Mary, lista para ayudarte con lo que necesites. No te me rajes que entre las dos sacamos la semana adelante sin problema. ¿Qué tienes por ahí en la nevera? Cuéntame, ándale.',
+    system: `Eres Mary, una mexicana normal, cálida y práctica, como la tía buena onda de Adriana. Hablas con frases como "hijita", "ándale", "ahorita", "órale", "no te me rajes", "ay qué bueno", "pues mira", "fíjate que", "corazón", "mi vida", "qué padre", "a poco". Eres cálida, maternal, muy práctica. Das consejos de cocina como si fueran de familia a familia, con mucho cariño. NUNCA en inglés.`
+  },
+  don: {
+    name: 'Don Finísima Persona',
+    mood: 'A su distinguido servicio 🎩',
+    welcome: 'Estimada Adriana, permítame presentarme: soy Don Finísima Persona, su humilde servidor en las nobles artes culinarias. Como aurora boreal que ilumina las tundras del norte, así iluminaré el camino gastronómico de su distinguido hogar. ¿En qué puedo servirle esta semana?',
+    system: `Eres Don Finísima Persona, un purista del español mexicano culto que usa lenguaje florido, dramático y muy figurado. Hablas con metáforas elaboradas, comparaciones poéticas, vocabulario rebuscado pero nunca vulgar. Frases como "como la aurora boreal de la gastronomía", "cual cóndor andino que surca los cielos nutricionales", "permítame usted", "distinguida señora", "las nobles artes culinarias", "el excelso manjar", "la quintaesencia del buen gusto", "cual fénix que renace de las cenizas del refrigerador". Siempre muy serio pero resultas en lo dramático. Das consejos prácticos pero con un lenguaje extremadamente elaborado y teatral. NUNCA en inglés.`
+  }
+};
+
+// ══ DATA ══
+const APPLIANCES = [
+  {id:'arrocera',em:'🍚',name:'Arrocera',desc:'Arroz perfecto sin vigilar'},
+  {id:'airfryer',em:'💨',name:'Air fryer',desc:'Crujiente sin aceite, rápido'},
+  {id:'microonda',em:'📡',name:'Microondas',desc:'Calentar y descongelar'},
+  {id:'congelador',em:'🧊',name:'Congelador',desc:'Batch cooking y anticipación'},
+  {id:'oster',em:'🫕',name:'Olla Oster',desc:'Slow cooker / presión — sola'},
+];
+
+const INGS = [
+  {id:'pollo',em:'🍗',n:'Pollo'},{id:'huevo',em:'🥚',n:'Huevos'},{id:'arroz',em:'🍚',n:'Arroz'},
+  {id:'frijoles',em:'🫘',n:'Frijoles negros'},{id:'pasta',em:'🍝',n:'Pasta'},{id:'pan',em:'🍞',n:'Pan'},
+  {id:'jamon',em:'🥩',n:'Jamón'},{id:'queso',em:'🧀',n:'Queso'},{id:'leche',em:'🥛',n:'Leche'},
+  {id:'yogur',em:'🫙',n:'Yogur'},{id:'atun',em:'🐟',n:'Atún lata'},{id:'platano',em:'🍌',n:'Plátano'},
+  {id:'manzana',em:'🍎',n:'Manzana'},{id:'mango',em:'🥭',n:'Mango'},{id:'zanahoria',em:'🥕',n:'Zanahoria'},
+  {id:'tomate',em:'🍅',n:'Tomate'},{id:'papa',em:'🥔',n:'Papas'},{id:'mantequilla',em:'🧈',n:'Mantequilla'},
+  {id:'aceite',em:'🫗',n:'Aceite'},{id:'avena',em:'🌾',n:'Avena'},{id:'brocoli',em:'🥦',n:'Brócoli'},
+  {id:'carne',em:'🥩',n:'Carne molida'},{id:'salsa',em:'🫙',n:'Salsa tomate'},
+];
+
+// ══ STATE ══
+let inventory = new Set();
+let appliances = new Set(['arrocera','airfryer','microonda','congelador','oster']);
+let daysCompleted = new Set();
+let shopChecked = new Set();
+let currentPlan = null;
+let chatHistory = [];
+let currentChar = 'brayan';
+let budgetActive = false;
+let budgetLimit = 0;
+let streak = 1;
+
+
+// ══ INIT ══
+function init() {
+  renderAppliances();
+  renderInventory();
+  renderDayPips();
+  loadState();
+  setChar('brayan', document.querySelector('[data-char="brayan"]'));
+}
+
+// ══ CHARACTER ══
+function setChar(id, btn) {
+  currentChar = id;
+  const ch = CHARS[id];
+  document.querySelectorAll('.char-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.getElementById('chat-char-name').textContent = ch.name;
+  document.getElementById('chat-char-mood').textContent = ch.mood;
+  chatHistory = [];
+  const msgs = document.getElementById('chat-msgs');
+  msgs.innerHTML = `<div class="msg bot">${ch.welcome}</div>`;
+  updateQuickReplies();
+  saveState();
+}
+
+function getSystemPrompt() {
+  const ch = CHARS[currentChar];
+  const appList = [...appliances].join(', ') || 'básicos';
+  const invList = [...inventory].join(', ') || 'básicos del hogar';
+  const budgetHint = budgetActive && budgetLimit ? ` Presupuesto semanal limitado: ₡${budgetLimit} colones costarricenses.` : '';
+  return `${ch.system}
+
+CONTEXTO IMPORTANTE: Ayudas a Adriana, mamá de Frida (10 años, come de todo, le gusta la carne) y Emiliano (6 años, MUY selectivo, rechaza texturas extrañas — siempre sugiere versiones suaves para él). Viven en Costa Rica. ALERGIA GRAVE: pistache y TODOS los frutos secos — jamás los incluyas. Sin énfasis en sabores mexicanos. Adriana tiene TDA: sé breve (máximo 5 líneas), da pasos concretos, celebra cada logro pequeño.${budgetHint}
+
+Electrodomésticos disponibles: ${appList}. PRIORIZA usarlos — especialmente air fryer y olla Oster porque trabajan solos.
+Ingredientes en casa ahora: ${invList}.
+
+Si alguien pide una RECETA, dala en pasos numerados breves (máximo 5 pasos). Si pide buscar recetas, sugiere 2-3 opciones concretas adaptadas a los niños y los electrodomésticos disponibles. Responde siempre en español con tu personalidad característica.`;
+}
+
+// ══ APPLIANCES ══
+function renderAppliances() {
+  const grid = document.getElementById('appliance-grid');
+  grid.innerHTML = '';
+  APPLIANCES.forEach(a => {
+    const el = document.createElement('div');
+    el.className = 'app-item' + (appliances.has(a.id) ? ' on' : '');
+    el.innerHTML = `<span style="font-size:20px">${a.em}</span><div><div class="app-name">${a.name}</div><div class="app-desc">${a.desc}</div></div>`;
+    el.onclick = () => {
+      appliances.has(a.id) ? appliances.delete(a.id) : appliances.add(a.id);
+      el.classList.toggle('on'); saveState();
+    };
+    grid.appendChild(el);
+  });
+}
+
+// ══ INVENTORY ══
+function renderInventory() {
+  const grid = document.getElementById('inv-grid');
+  grid.innerHTML = '';
+  INGS.forEach(ing => {
+    const el = document.createElement('div');
+    el.className = 'inv-item' + (inventory.has(ing.id) ? ' on' : '');
+    el.innerHTML = `<span class="inv-em">${ing.em}</span><span>${ing.n}</span>`;
+    el.onclick = () => {
+      if (inventory.has(ing.id)) { inventory.delete(ing.id); el.classList.remove('on'); }
+      else { inventory.add(ing.id); el.classList.add('on'); showToast(`✓ ${ing.n}`); }
+      if (inventory.size > 0) unlockWin('win-inv');
+      saveState();
+    };
+    grid.appendChild(el);
+  });
+}
+
+function addCustomIng() {
+  const inp = document.getElementById('inv-custom');
+  const v = inp.value.trim(); if (!v) return;
+  const id = v.toLowerCase().replace(/\s/g,'_');
+  INGS.push({id, em:'🥡', n:v});
+  inventory.add(id);
+  renderInventory(); inp.value = '';
+  showToast('✓ Agregado'); saveState();
+}
+
+// ══ BUDGET ══
+function toggleBudget() {
+  budgetActive = !budgetActive;
+  document.getElementById('bud-toggle').classList.toggle('on', budgetActive);
+  document.getElementById('bud-row').style.display = budgetActive ? 'flex' : 'none';
+  document.getElementById('bud-display').style.display = budgetActive ? 'block' : 'none';
+  unlockWin('win-config'); saveState();
+}
+
+function saveBudget() {
+  budgetLimit = parseInt(document.getElementById('bud-inp').value) || 0;
+  updateBudgetBar(); saveState();
+}
+
+function updateBudgetBar(spent) {
+  if (!budgetActive) return;
+  if (spent !== undefined) {
+    document.getElementById('b-spent').textContent = '₡' + spent.toLocaleString();
+    document.getElementById('b-limit').textContent = budgetLimit ? '₡' + budgetLimit.toLocaleString() : '₡—';
+    const pct = budgetLimit ? Math.min(Math.round((spent/budgetLimit)*100),100) : 0;
+    const fill = document.getElementById('b-fill');
+    fill.style.width = pct + '%';
+    fill.style.background = pct > 85 ? 'var(--rojo)' : pct > 65 ? 'var(--naranja-m)' : 'var(--verde-m)';
+    document.getElementById('bud-display').style.display = 'block';
+  }
+}
+
+// ══ API KEY ══
+
+
+// ══ PLAN GENERATION ══
+async function generatePlan() {
+
+  if (inventory.size === 0) { showTab('config'); showToast('Marca lo que tienes en casa'); return; }
+
+  document.getElementById('plan-empty').style.display = 'none';
+  document.getElementById('plan-content').style.display = 'block';
+  document.getElementById('day-cards').innerHTML = '<div class="empty-state"><div>⏳</div><p>Preparando tu plan…</p></div>';
+  showToast('Generando plan…');
+
+  const appList = [...appliances].join(', ');
+  const invList = [...inventory].join(', ');
+  const budgetHint = budgetActive && budgetLimit ? `Presupuesto: ₡${budgetLimit} colones. Elige ingredientes económicos y reutilizables.` : '';
+
+  const prompt = `Crea un plan de comidas para 3 días (Lunes, Martes, Miércoles) para Adriana en Costa Rica.
+Niños: Frida (10 años, come todo, le gusta carne) y Emiliano (6 años, selectivo, RECHAZA texturas).
+ALERGIA GRAVE: pistache y TODOS los frutos secos — jamás incluirlos.
+Electrodomésticos: ${appList}. PRIORIZA air fryer y olla Oster por ser automáticos.
+En casa tiene: ${invList}. ${budgetHint}
+
+Responde SOLO con JSON válido sin texto extra ni markdown:
+{"days":[{"day":"Lunes","desayuno":{"nombre":"Nombre corto","frida":"descripción","emiliano":"descripción","minutos":8,"aparato":"air fryer"},"lonchera":{"nombre":"Nombre corto","frida":"descripción","emiliano":"descripción"},"cena":{"nombre":"Nombre corto","detalle":"descripción para ambos","aparato":"olla oster"},"tip":"consejo de prep corto"}],"compras":[{"categoria":"Proteína","items":[{"nombre":"Pollo pechuga 1kg","precio_est":4500}]}],"total_estimado":18000}
+Solo incluye en compras lo que NO está en: ${invList}. Precios en colones costarricenses reales.`;
+
+  try {
+    const resp = await callClaude([{role:'user',content:prompt}], null, 1200);
+    let raw = resp.replace(/```json|```/g,'').trim();
+    currentPlan = JSON.parse(raw);
+  } catch(e) {
+    currentPlan = fallbackPlan();
+  }
+  renderPlan(currentPlan);
+  unlockWin('win-plan');
+  celebrate('verde','🎉','¡Plan listo para 3 días!','Revisa cada día y prepara tu lista del súper');
+  saveState();
+}
+
+async function callClaude(messages, system, maxTokens=800) {
+  const body = { model:'claude-sonnet-4-6', max_tokens: maxTokens, messages };
+  if (system) body.system = system;
+  const resp = await fetch('/api/chat', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(body)
+  });
+  if (!resp.ok) throw new Error('API error ' + resp.status);
+  const data = await resp.json();
+  return data.content[0].text;
+}
+
+function fallbackPlan() {
+  return {
+    days:[
+      {day:'Lunes',
+       desayuno:{nombre:'Huevos revueltos + tostadas',frida:'Huevos con tomate picado, tostadas integrales',emiliano:'Huevos solos sin nada, pan blanco, leche',minutos:8,aparato:'sartén'},
+       lonchera:{nombre:'Sándwich + fruta',frida:'Jamón, queso y lechuga. Manzana. Agua.',emiliano:'Queso solo en pan blanco. Plátano. Galletas de arroz.'},
+       cena:{nombre:'Pollo air fryer + arroz en arrocera',detalle:'Pollo en air fryer 180° por 20 min. Arroz en arrocera. Zanahoria cocida para Frida, papas al air fryer para Emiliano.',aparato:'air fryer + arrocera'},
+       tip:'Cocina doble pollo — el de mañana ya está resuelto'},
+      {day:'Martes',
+       desayuno:{nombre:'Yogur con fruta',frida:'Yogur natural, plátano en rodajas, granola',emiliano:'Yogur natural solo, cereal, vaso de leche',minutos:3,aparato:'ninguno'},
+       lonchera:{nombre:'Pollo del lunes + arroz',frida:'Arroz con pollo deshebrado, mango, agua',emiliano:'Arroz blanco + pollo, galletas de arroz, plátano'},
+       cena:{nombre:'Pasta con salsa de tomate',detalle:'Pasta cocida. Salsa de tomate con carne molida. Para Emiliano: salsa licuada sin trozos.',aparato:'sartén'},
+       tip:'Licúa la salsa antes de servir — Emiliano la acepta cremosa'},
+      {day:'Miércoles',
+       desayuno:{nombre:'Pancakes de avena',frida:'Pancakes con miel y plátano',emiliano:'Pancakes solo con mantequilla — textura suave perfecta',minutos:10,aparato:'sartén'},
+       lonchera:{nombre:'Atún en pan + fruta',frida:'Sándwich de atún, lechuga, mango. Agua.',emiliano:'Atún en pan blanco solo. Plátano. Galletas.'},
+       cena:{nombre:'Frijoles en olla Oster + arroz arrocera',detalle:'Frijoles negros en olla Oster slow cooker (4-6h, se hacen solos). Arroz en arrocera. Huevo estrellado para cada uno.',aparato:'olla oster + arrocera'},
+       tip:'Pon los frijoles en la mañana — a la cena están perfectos sin que los vigiles'}
+    ],
+    compras:[
+      {categoria:'Proteína',items:[{nombre:'Pollo pechuga 1kg',precio_est:4500},{nombre:'Carne molida 300g',precio_est:2800},{nombre:'Atún en agua x2',precio_est:1400},{nombre:'Jamón 150g',precio_est:1800}]},
+      {categoria:'Lácteos',items:[{nombre:'Leche 1L',precio_est:900},{nombre:'Yogur natural x2',precio_est:1200},{nombre:'Queso fresco 200g',precio_est:1600}]},
+      {categoria:'Frutas y verduras',items:[{nombre:'Plátanos x6',precio_est:600},{nombre:'Manzanas x4',precio_est:900},{nombre:'Mango x2',precio_est:700},{nombre:'Zanahoria',precio_est:400},{nombre:'Tomates x4',precio_est:600}]},
+      {categoria:'Despensa',items:[{nombre:'Pan integral',precio_est:800},{nombre:'Pasta corta 400g',precio_est:700},{nombre:'Avena',precio_est:600},{nombre:'Galletas de arroz',precio_est:900}]}
+    ],
+    total_estimado:21400
+  };
+}
+
+function renderPlan(plan) {
+  const container = document.getElementById('day-cards');
+  container.innerHTML = '';
+  plan.days.forEach((day, i) => {
+    const apps = [day.desayuno?.aparato, day.cena?.aparato].filter(a=>a&&a!=='ninguno'&&a!=='sartén').join(', ');
+    const div = document.createElement('div');
+    div.innerHTML = `
+      <div class="slbl">
+        📅 ${day.day}
+        <button onclick="completeDay(${i})" id="cbtn-${i}" style="font-size:11px;padding:4px 10px;border-radius:20px;border:1.5px solid var(--verde-b);background:var(--verde-l);color:var(--verde);cursor:pointer;font-weight:700">${daysCompleted.has(i)?'✓ Listo':'Marcar listo'}</button>
+      </div>
+      ${apps?`<div class="app-badges"><span style="font-size:11px;color:var(--text3)">Hoy usas:</span>${apps.split(',').map(a=>`<span class="app-badge">${appEmoji(a.trim())} ${a.trim()}</span>`).join('')}</div>`:''}
+      <div class="card">
+        <div class="card-hdr" onclick="toggleBody('d${i}a')">
+          <div class="cicon" style="background:var(--naranja-l)">☀️</div>
+          <div class="clbl">${day.desayuno.nombre}</div>
+          <span class="badge bg-naranja">${day.desayuno.minutos} min</span>
+          <span class="chev" id="chev-d${i}a">▾</span>
+        </div>
+        <div class="cbody hidden" id="d${i}a">
+          <div class="meal-block"><div class="meal-who"><div class="avatar av-f">F</div><div class="meal-name">Frida</div></div><div class="meal-det">${day.desayuno.frida}</div></div>
+          <hr class="divider">
+          <div class="meal-block"><div class="meal-who"><div class="avatar av-e">E</div><div class="meal-name">Emiliano</div></div><div class="meal-det">${day.desayuno.emiliano}</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr" onclick="toggleBody('d${i}l')">
+          <div class="cicon" style="background:var(--morado-l)">🎒</div>
+          <div class="clbl">${day.lonchera.nombre}</div>
+          <span class="badge bg-morado">Lonchera</span>
+          <span class="chev" id="chev-d${i}l">▾</span>
+        </div>
+        <div class="cbody hidden" id="d${i}l">
+          <div class="meal-block"><div class="meal-who"><div class="avatar av-f">F</div><div class="meal-name">Frida</div></div><div class="meal-det">${day.lonchera.frida}</div></div>
+          <hr class="divider">
+          <div class="meal-block"><div class="meal-who"><div class="avatar av-e">E</div><div class="meal-name">Emiliano</div></div><div class="meal-det">${day.lonchera.emiliano}</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr" onclick="toggleBody('d${i}c')">
+          <div class="cicon" style="background:var(--verde-l)">🌙</div>
+          <div class="clbl">${day.cena.nombre}</div>
+          <span class="chev" id="chev-d${i}c">▾</span>
+        </div>
+        <div class="cbody hidden" id="d${i}c">
+          <div class="meal-det" style="padding:0">${day.cena.detalle}</div>
+          <div class="meal-tip">💡 ${day.tip}</div>
+        </div>
+      </div>`;
+    container.appendChild(div);
+  });
+
+  // Today summary on home
+  if (plan.days[0]) {
+    document.getElementById('today-wrap').style.display = 'block';
+    document.getElementById('today-name').textContent = plan.days[0].day;
+    document.getElementById('today-cards').innerHTML = `
+      <div class="card" style="padding:12px 14px"><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px">☀️ DESAYUNO — ${plan.days[0].desayuno.minutos} MIN</div><div style="font-size:13px;color:var(--text2)">${plan.days[0].desayuno.nombre}</div></div>
+      <div class="card" style="padding:12px 14px"><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px">🎒 LONCHERA</div><div style="font-size:13px;color:var(--text2)">${plan.days[0].lonchera.nombre}</div></div>
+      <div class="card" style="padding:12px 14px"><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:5px">🌙 CENA</div><div style="font-size:13px;color:var(--text2)">${plan.days[0].cena.nombre}</div><div class="meal-tip" style="margin-top:8px">💡 ${plan.days[0].tip}</div></div>`;
+  }
+
+  // Shopping
+  renderShop(plan.compras, plan.total_estimado);
+  document.getElementById('plan-empty').style.display = 'none';
+  document.getElementById('plan-content').style.display = 'block';
+  document.getElementById('shop-empty').style.display = 'none';
+  document.getElementById('shop-content').style.display = 'block';
+}
+
+function appEmoji(n) {
+  const m={arrocera:'🍚',airfryer:'💨','air fryer':'💨',microondas:'📡',microonda:'📡',oster:'🫕','olla oster':'🫕',congelador:'🧊'};
+  return m[n.toLowerCase()]||'🔧';
+}
+
+// ══ SHOPPING ══
+function renderShop(compras, total) {
+  const c = document.getElementById('shop-list'); c.innerHTML = '';
+  let totalItems = 0; let est = 0;
+  compras.forEach(cat => {
+    const sec = document.createElement('div'); sec.className = 'shop-sec';
+    sec.innerHTML = `<div class="shop-sec-title">${cat.categoria}</div>`;
+    cat.items.forEach(item => {
+      const name = typeof item==='string'?item:item.nombre;
+      const price = typeof item==='object'?(item.precio_est||0):0;
+      est += price; totalItems++;
+      const id = 'si-'+name.replace(/[\s\/]/g,'-');
+      const checked = shopChecked.has(id);
+      const row = document.createElement('div');
+      row.className = 'shop-item'+(checked?' checked':''); row.id = id;
+      row.innerHTML = `<div class="shop-chk">${checked?'✓':''}</div><div class="shop-name">${name}</div>${price?`<div class="shop-price">₡${price.toLocaleString()}</div>`:''}`;
+      row.onclick = () => {
+        if(shopChecked.has(id)){shopChecked.delete(id);row.classList.remove('checked');row.querySelector('.shop-chk').textContent='';}
+        else{shopChecked.add(id);row.classList.add('checked');row.querySelector('.shop-chk').textContent='✓';showToast('✓ Al carrito');}
+        updateShopCount();
+        const all=document.querySelectorAll('.shop-item').length;
+        if(shopChecked.size===all&&all>0) celebrate('naranja','🛒','¡Súper completado!','Ya tienes todo lo que necesitas esta semana');
+        saveState();
+      };
+      sec.appendChild(row);
+    });
+    c.appendChild(sec);
+  });
+  if (budgetActive && est > 0) updateBudgetBar(est);
+  updateShopCount();
+}
+
+function updateShopCount() {
+  const all = document.querySelectorAll('.shop-item').length;
+  const rem = all - shopChecked.size;
+  document.getElementById('shop-rem').textContent = rem===0?'¡Todo listo!':rem+' pendientes';
+}
+
+function markAll() {
+  document.querySelectorAll('.shop-item').forEach(el=>{shopChecked.add(el.id);el.classList.add('checked');el.querySelector('.shop-chk').textContent='✓';});
+  updateShopCount(); celebrate('naranja','🛒','¡Carrito completo!',''); saveState();
+}
+
+function clearChecked() {
+  document.querySelectorAll('.shop-item.checked').forEach(el=>{shopChecked.delete(el.id);el.classList.remove('checked');el.querySelector('.shop-chk').textContent='';});
+  updateShopCount(); saveState();
+}
+
+// ══ DAY COMPLETION ══
+function completeDay(i) {
+  daysCompleted.add(i);
+  const btn = document.getElementById('cbtn-'+i);
+  if(btn){btn.textContent='✓ Listo';btn.style.background='var(--verde-m)';btn.style.color='white';btn.style.borderColor='var(--verde-m)';}
+  const wins=['win-d1','win-d2','win-d3'];
+  if(wins[i]) unlockWin(wins[i]);
+  streak = daysCompleted.size+1;
+  document.getElementById('streak-badge').textContent=`🔥 ${streak} día${streak>1?'s':''}`;
+  const msgs=['¡Día 1 completado!','¡Dos días seguidos!','¡Semana completa!'];
+  celebrate('verde',['✅','🔥','🏆'][i]||'🎉',msgs[i]||'¡Día listo!','');
+  renderDayPips(); saveState();
+}
+
+// ══ PROGRESS ══
+function renderDayPips() {
+  const c = document.getElementById('day-pips'); c.innerHTML='';
+  ['L','M','X'].forEach((d,i)=>{
+    const p=document.createElement('div');
+    p.className='pip'+(i===0?' active':'')+(daysCompleted.has(i)?' done':'');
+    p.textContent=daysCompleted.has(i)?'✓':d;
+    p.onclick=()=>{showTab('plan');setTimeout(()=>document.getElementById('day-cards')?.children[i]?.scrollIntoView({behavior:'smooth'}),100);};
+    c.appendChild(p);
+  });
+  document.getElementById('prog-fill').style.width=Math.max(Math.round((daysCompleted.size/3)*100),5)+'%';
+}
+
+// ══ CHAT ══
+async function sendChat() {
+
+  const inp=document.getElementById('chat-in');
+  const text=inp.value.trim(); if(!text)return;
+  inp.value='';
+  addMsg(text,'user');
+  document.getElementById('qreplies').innerHTML='';
+  await getBotReply(text);
+}
+
+function sendQuick(text) {
+  showTab('chat');
+  setTimeout(()=>{document.getElementById('chat-in').value=text;sendChat();},100);
+}
+
+function addMsg(text,type) {
+  const msgs=document.getElementById('chat-msgs');
+  const div=document.createElement('div'); div.className='msg '+type; div.textContent=text;
+  msgs.appendChild(div); msgs.scrollTop=msgs.scrollHeight; return div;
+}
+
+async function getBotReply(userMsg) {
+  const typing=addMsg('','bot');
+  typing.innerHTML='<span class="typing-dots"><span></span><span></span><span></span></span>';
+  chatHistory.push({role:'user',content:userMsg});
+  try {
+    const reply=await callClaude(chatHistory.slice(-12), getSystemPrompt(), 600);
+    chatHistory.push({role:'assistant',content:reply});
+    typing.innerHTML='';
+    await typeText(typing,reply);
+  } catch(e) {
+    typing.remove();
+    const errMsgs={brayan:'¡Nel, carnal! Falló la conexión. Intenta de nuevo 🤙',pao:'O sea, hubo un problemita de conexión. ¡Inténtalo de nuevo!',mary:'Ay hijita, falló la conexión. Vuelve a intentar, ándale.',don:'La conexión ha sucumbido ante adversidades técnicas. Por favor, inténtelo de nuevo.'};
+    addMsg(errMsgs[currentChar]||'Error de conexión, intenta de nuevo.','bot');
+  }
+  updateQuickReplies();
+}
+
+async function typeText(el,text) {
+  el.textContent='';
+  for(let i=0;i<text.length;i++){el.textContent+=text[i];if(i%4===0)await new Promise(r=>setTimeout(r,8));}
+  document.getElementById('chat-msgs').scrollTop=99999;
+}
+
+function updateQuickReplies() {
+  const qr=document.getElementById('qreplies'); qr.innerHTML='';
+  const opts={
+    brayan:['¿Y si no tengo ese ingrediente?','Algo más rápido, carnal','¿Qué hago con lo del congelador?'],
+    pao:['¿Hay opción más cute?','O sea, ¿algo más fácil?','¿Qué hago si falta algo?'],
+    mary:['¿Y si no tengo eso, hijita?','Dame algo más rápido','¿Qué hago con lo del congelador?'],
+    don:['¿Existe alternativa igualmente excelsa?','¿Podría sugerir algo más expedito?','¿Qué hacer ante la escasez de ingredientes?']
+  };
+  (opts[currentChar]||opts.brayan).forEach(o=>{
+    const b=document.createElement('button'); b.className='qbtn'; b.textContent=o;
+    b.onclick=()=>sendQuick(o); qr.appendChild(b);
+  });
+}
+
+// ══ UI ══
+function showTab(id) {
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  const map={inicio:0,plan:1,super:2,chat:3,config:4};
+  document.querySelectorAll('.nav-btn')[map[id]]?.classList.add('active');
+  if(id==='chat') document.getElementById('chat-in').focus();
+}
+
+function toggleBody(id) {
+  const b=document.getElementById(id); const c=document.getElementById('chev-'+id);
+  const h=b.classList.toggle('hidden');
+  if(c) c.classList.toggle('open',!h);
+}
+
+function celebrate(type,emoji,text,sub) {
+  const el=document.getElementById('celebrate');
+  el.className='celebrate '+type+' show';
+  document.getElementById('cel-emoji').textContent=emoji;
+  document.getElementById('cel-text').textContent=text;
+  document.getElementById('cel-sub').textContent=sub;
+  el.scrollIntoView({behavior:'smooth',block:'nearest'});
+  setTimeout(()=>el.classList.remove('show'),4500);
+}
+
+function unlockWin(id) { const el=document.getElementById(id); if(el) el.style.opacity='1'; }
+
+function showToast(msg) {
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+// ══ PERSISTENCE ══
+function saveState() {
+  try {
+    localStorage.setItem('adriana-v3',JSON.stringify({
+      inventory:[...inventory], appliances:[...appliances],
+      daysCompleted:[...daysCompleted], shopChecked:[...shopChecked],
+      currentPlan, currentChar, budgetActive, budgetLimit, streak
+    }));
+  } catch(e){}
+}
+
+function loadState() {
+  try {
+    const raw=localStorage.getItem('adriana-v3'); if(!raw)return;
+    const s=JSON.parse(raw);
+    inventory=new Set(s.inventory||[]);
+    appliances=new Set(s.appliances||['arrocera','airfryer','microonda','congelador','oster']);
+    daysCompleted=new Set(s.daysCompleted||[]);
+    shopChecked=new Set(s.shopChecked||[]);
+    currentPlan=s.currentPlan||null;
+    budgetActive=s.budgetActive||false;
+    budgetLimit=s.budgetLimit||0;
+    streak=s.streak||1;
+    
+
+    renderInventory(); renderAppliances(); renderDayPips();
+    document.getElementById('streak-badge').textContent=`🔥 ${streak} día${streak>1?'s':''}`;
+
+
+
+    if(s.currentChar) {
+      const btn=document.querySelector(`[data-char="${s.currentChar}"]`);
+      setChar(s.currentChar, btn);
+    }
+
+    if(budgetActive){
+      document.getElementById('bud-toggle').classList.add('on');
+      document.getElementById('bud-row').style.display='flex';
+      if(budgetLimit) document.getElementById('bud-inp').value=budgetLimit;
+    }
+
+    if(currentPlan){
+      renderPlan(currentPlan);
+      document.querySelectorAll('.shop-item').forEach(el=>{
+        if(shopChecked.has(el.id)){el.classList.add('checked');el.querySelector('.shop-chk').textContent='✓';}
+      });
+      updateShopCount();
+      daysCompleted.forEach(i=>{
+        const btn=document.getElementById('cbtn-'+i);
+        if(btn){btn.textContent='✓ Listo';btn.style.background='var(--verde-m)';btn.style.color='white';btn.style.borderColor='var(--verde-m)';}
+        const wins=['win-d1','win-d2','win-d3'];
+        if(wins[i]) unlockWin(wins[i]);
+      });
+      unlockWin('win-plan');
+    }
+    if(inventory.size>0) unlockWin('win-inv');
+    unlockWin('win-config');
+  } catch(e){}
+}
+
+init();
+</script>
+</body>
+</html>
