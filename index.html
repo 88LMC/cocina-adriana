@@ -424,6 +424,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
   <button class="btn-p naranja" onclick="generatePlan();showTab('plan')">✨ Generar plan para 3 días</button>
   <div class="note">La IA adapta el plan a tu despensa y electrodomésticos</div>
+
+  <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border)">
+    <div class="slbl">Zona de reinicio</div>
+    <button onclick="resetApp()" style="width:100%;padding:11px;background:transparent;color:var(--rojo);border:1.5px solid #F5B0AA;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">
+      🗑️ Borrar todo y empezar de cero
+    </button>
+    <div class="note">Borra despensa, plan y lista del súper. Los personajes se mantienen.</div>
+  </div>
 </div>
 
 </div><!-- /main -->
@@ -557,7 +565,7 @@ function renderInventory() {
     el.onclick = () => {
       if (inventory.has(ing.id)) { inventory.delete(ing.id); el.classList.remove('on'); }
       else { inventory.add(ing.id); el.classList.add('on'); showToast(`✓ ${ing.n}`); }
-      if (inventory.size > 0) unlockWin('win-inv');
+      if (inventory.size > 0) { unlockWin('win-inv'); checkOnboarding(); }
       saveState();
     };
     grid.appendChild(el);
@@ -638,6 +646,7 @@ Solo incluye en compras lo que NO está en: ${invList}. Precios en colones costa
   renderPlan(currentPlan);
   unlockWin('win-plan');
   celebrate('verde','🎉','¡Plan listo para 3 días!','Revisa cada día y prepara tu lista del súper');
+  checkOnboarding();
   saveState();
 }
 
@@ -985,7 +994,56 @@ function loadState() {
   } catch(e){}
 }
 
+// ══ RESET ══
+function resetApp() {
+  if (!confirm('¿Borrar todo y empezar de cero?')) return;
+  inventory = new Set();
+  daysCompleted = new Set();
+  shopChecked = new Set();
+  currentPlan = null;
+  budgetActive = false;
+  budgetLimit = 0;
+  streak = 1;
+  chatHistory = [];
+  localStorage.removeItem('adriana-v3');
+  // Reset UI
+  renderInventory();
+  renderAppliances();
+  renderDayPips();
+  document.getElementById('plan-empty').style.display = 'block';
+  document.getElementById('plan-content').style.display = 'none';
+  document.getElementById('shop-empty').style.display = 'block';
+  document.getElementById('shop-content').style.display = 'none';
+  document.getElementById('today-wrap').style.display = 'none';
+  document.getElementById('streak-badge').textContent = '🔥 Día 1';
+  document.getElementById('bud-toggle').classList.remove('on');
+  document.getElementById('bud-row').style.display = 'none';
+  document.getElementById('bud-display').style.display = 'none';
+  ['win-config','win-plan','win-d1','win-d2','win-d3'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.opacity = '0.3';
+  });
+  document.querySelectorAll('.shop-item').forEach(el => el.remove());
+  setChar(currentChar, document.querySelector(\`[data-char="\${currentChar}"]\`));
+  checkOnboarding();
+  showTab('inicio');
+  showToast('✓ App reiniciada');
+}
+
+function checkOnboarding() {
+  const ob = document.getElementById('onboarding');
+  const s1 = document.getElementById('step1-done');
+  if (!ob) return;
+  if (!currentPlan) {
+    ob.style.display = 'block';
+    if (s1) s1.style.display = inventory.size > 0 ? 'inline' : 'none';
+  } else {
+    ob.style.display = 'none';
+  }
+}
+
 init();
+checkOnboarding();
 </script>
 </body>
 </html>
