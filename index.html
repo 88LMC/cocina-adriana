@@ -965,7 +965,7 @@ function loadState() {
 
 
     if(s.currentChar) {
-      const btn=document.querySelector(`[data-char="${s.currentChar}"]`);
+      const btn=document.querySelector('[data-char="' + s.currentChar + '"]');
       setChar(s.currentChar, btn);
     }
 
@@ -1024,7 +1024,7 @@ function resetApp() {
     if (el) el.style.opacity = '0.3';
   });
   document.querySelectorAll('.shop-item').forEach(el => el.remove());
-  setChar(currentChar, document.querySelector(\`[data-char="\${currentChar}"]\`));
+  setChar(currentChar, document.querySelector('[data-char="' + currentChar + '"]'));
   checkOnboarding();
   showTab('inicio');
   showToast('✓ App reiniciada');
